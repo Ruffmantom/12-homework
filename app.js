@@ -1,5 +1,6 @@
 var mysql = require("mysql");
 var inquirer = require("inquirer");
+var cTabel = require("console.table");
 
 // need to connect db to js file
 var connection = mysql.createConnection({
@@ -11,13 +12,17 @@ var connection = mysql.createConnection({
 });
 connection.connect(function (err) {
     if (err) throw err;
-    runSearch();
 });
 
 //  need choice question for department
 
+// need to save employees to variable for choices when user wantes to update or view
+
+// result from inquirer pass "INSERT INTO" table 
 
 //  need questions for roles
 
 
 //  Employee
+
+
