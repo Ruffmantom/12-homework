@@ -1,0 +1,24 @@
+{
+  "name": "12-homework",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ruffmantom/12-homework.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Ruffmantom/12-homework/issues"
+  },
+  "homepage": "https://github.com/Ruffmantom/12-homework#readme",
+  "dependencies": {
+    "inquirer": "^7.0.4",
+    "mysql": "^2.18.1"
+  }
+}
