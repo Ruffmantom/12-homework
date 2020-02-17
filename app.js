@@ -35,7 +35,7 @@ function startquestions() {
         })
         .then(function (choice) {
             switch (choice.action) {
-                case "Add Department?":
+                case "Add Department":
                     // insert function
                     addDepartment();
                     break;
@@ -71,22 +71,34 @@ function startquestions() {
         })
 }
 startquestions();
-
 // 
 // //////////
 // //////////////
 // //////////////////
 
 function addDepartment() {
-    var query = "INSERT INTO department (name)";
+    var query = "INSERT INTO department SET ?";
     inquirer
-        .prompt({
-            name: "depName",
-            type: "input",
-            message: "What is the name of the deartment?"
-        }).then(function (answer) {
-            connection.query(query, answer.depName);
-        })
+        .prompt([
+            {
+                name: "depName",
+                type: "input",
+                message: "What is the name of the deartment?"
+            }
+        ]).then(function (answer) {
+            connection.query(
+                query,
+                {
+                    name: answer.depName
+                },
+                function (err) {
+                    if (err) throw err;
+                    console.log("You have added the " + answer.depName + " deapartment successfully!");
+                    // re-prompt the user for if they want to bid or post
+                    startquestions();
+                }
+            );
+        });
 };
 // veiw the departments
 function viewDepartments() {
@@ -96,27 +108,82 @@ function viewDepartments() {
             console.log("ID: " + res[i].id + " " + "Name: " + res[i].name);
 
         }
-        startquestions();
     })
+    startquestions();
 };
-
+// Add role to role data
 function addRole() {
-    var query = "SELECT position, song, year FROM top5000 WHERE ?";
+    var query = "INSERT INTO role SET ?";
+    inquirer
+        .prompt([
+            {
+                name: "title",
+                type: "input",
+                message: "What is the name of the Role that you want to add?"
+            },
+            {
+                name: "salary",
+                type: "input",
+                message: "Please enter the salary?",
+                validate: function (salary) {
+                    if (isNaN(salary) === false) {
+                        return true;
+                    }
+                    return false;
+                }
+            },
+            {
+                name: "depid",
+                type: "input",
+                message: "Please enter the Department ID number?",
+                validate: function (depid) {
+                    if (isNaN(depid) === false) {
+                        return true;
+                    }
+                    return false;
+                }
+            }
+        ]).then(function (answer) {
+            connection.query(
+                query,
+                {
+                    title: answer.title,
+                    salary: answer.salary,
+                    department_id: answer.depid
+                },
+                function (err) {
+                    if (err) throw err;
+                    console.log("You have added " + answer.title + " as a new role successfully!");
+                    // re-prompt the user for if they want to bid or post
+                    startquestions();
+                }
+            );
+        })
 }
+// view roles
 function viewRoles() {
-    var query = "SELECT position, song, year FROM top5000 WHERE ?";
+    var query = "SELECT * from role";
+    connection.query(query, function (err, res) {
+        for (var i = 0; i < res.length; i++) {
+
+        }
+        console.table(res);
+    })
+    startquestions();
 }
 // need to save employees to variable for choices when user wantes to update or view
 function addEmployee() {
-    var query = "SELECT position, song, year FROM top5000 WHERE ?";
+
 }
+// view all employees
 function viewEmployees() {
     var query = "SELECT position, song, year FROM top5000 WHERE ?";
 }
+// update employee, or delete
 function updateEmployee() {
     var query = "SELECT position, song, year FROM top5000 WHERE ?";
 }
-// result from inquirer pass "INSERT INTO" table
+
 
 //  need questions for roles
 
