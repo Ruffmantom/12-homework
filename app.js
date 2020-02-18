@@ -29,7 +29,7 @@ function startquestions() {
                 "View Roles",
                 "Add Employee",
                 "View Employees",
-                "Update Employee Role",
+                "Update or delete Employee",
                 "EXIT"
             ]
         })
@@ -59,7 +59,7 @@ function startquestions() {
                     // insert function
                     viewEmployees();
                     break;
-                case "Update employee role":
+                case "Update or delete Employee":
                     // insert function
                     updateEmployee();
                     break;
@@ -83,7 +83,7 @@ function addDepartment() {
             {
                 name: "depName",
                 type: "input",
-                message: "What is the name of the deartment?"
+                message: "What is the name of the department?"
             }
         ]).then(function (answer) {
             connection.query(
@@ -173,15 +173,62 @@ function viewRoles() {
 }
 // need to save employees to variable for choices when user wantes to update or view
 function addEmployee() {
-
+    // make a constructor that will take in all the data for a new employee
+    // then push it to the database
 }
 // view all employees
 function viewEmployees() {
-    var query = "SELECT position, song, year FROM top5000 WHERE ?";
+    var query = "SELECT * from employee";
+    connection.query(query, function (err, res) {
+        for (var i = 0; i < res.length; i++) {
+        }
+        console.table(res);
+    })
+
+    startquestions();
 }
+// creating a variable that stores the employees
+var employees = connection.query("SELECT * from employee", function (err, res) {
+    for (var i = 0; i < res.length; i++) {
+        return res.name;
+    }
+})
 // update employee, or delete
 function updateEmployee() {
-    var query = "SELECT position, song, year FROM top5000 WHERE ?";
+    inquirer
+        .prompt({
+            name: "choice",
+            type: "list",
+            message: "What would you like to do?",
+            choices: [
+                "Update Employee data",
+                "Delete Employee"
+            ]
+        })
+        .then(function (answer) {
+            switch (answer.choice) {
+                case "Update Employee data":
+                    // add function to update employees
+                    // veiw all employees as a choice list
+                    // let employeeList = [employees];
+                    inquirer
+                        .prompt([
+                            {
+                                name: "employee",
+                                type: "list",
+                                choices: [
+                                    employees
+                                ]
+                            }
+                        ])
+
+                    break;
+                case "Delete Employee":
+                    // add function to delete employees
+                    // veiw all employees as a choice list
+                    break;
+            }
+        })
 }
 
 
