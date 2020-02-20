@@ -8,6 +8,7 @@ var opening = require("./opening")
 var employeeArray = [];
 var employeeObjects = [];
 var roleArray = [];
+var roleObjects = [];
 
 opening();
 // need to connect db to js file
@@ -345,7 +346,7 @@ function updateEmployee() {
                     type: "list",
                     choices: function () {
                         for (var i = 0; i < results.length; i++) {
-                            var fullName = `${results[i].first_name} ${results[i].last_name}`
+                            var fullName = `${results[i].id} ${results[i].first_name} ${results[i].last_name}`
                             employeeArray.push(fullName);
                             employeeObjects.push(results);
                         }
@@ -376,36 +377,35 @@ function updateEmployee() {
                                 choices: roleArray
                             }
                         ]).then(function (updated) {
-                            // var query = `UPDATE table set first_name = ${updated.firstName.trim()}, last_name = ${updated.lastName.trim()}, role_id = ${} `
-
-                            connection.query(
-                                query,
-                                {
-                                    title: updated.title.trim(),
-                                    salary: updated.salary,
-                                    department_id: answer.depid
-                                },
-                                function (err) {
-                                    if (err) throw err;
-                                    console.log("You have added " + answer.title + " as a new role successfully!");
-                                    // re-prompt the user for if they want to bid or post
-                                    startquestions();
-                                }
-                            );
+                            let x = parseInt(updated.Roll.split(" ")[0]);
+                            let nameID = parseInt(answer.choice.split(" ")[0]);
+                            var query = `UPDATE employee set first_name="${updated.firstName}",last_name="${updated.lastName}",role_id = ${x} WHERE id=${nameID}`;
+                            connection.query(query, function (err, res) {
+                                if (err) throw err;
+                                console.log("---------------------------------------------------------------")
+                                console.log(`You have successfully updated ${updated.firstName} with a role of ${updated.Roll}!`);
+                                console.log("---------------------------------------------------------------")
+                                startquestions();
+                            })
                         })
                 });
-
-
             });
     })
 };
 
 function pushIntoRoleArr() {
     connection.query("SELECT * FROM role", function (err, roleList) {
+        if (err) throw err;
         for (var i = 0; i < roleList.length; i++) {
-            var title = roleList[i].title;
+            var title = `${roleList[i].id} ${roleList[i].title}`;
+            var lO = roleList[i].id;
+
             roleArray.push(title);
+            roleObjects.push(lO);
         }
+
+
+
     });
 }
 // RUN APP
