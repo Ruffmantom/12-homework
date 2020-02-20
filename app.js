@@ -9,6 +9,7 @@ var employeeArray = [];
 var employeeObjects = [];
 var roleArray = [];
 var roleObjects = [];
+var depArray = [];
 
 opening();
 // need to connect db to js file
@@ -25,6 +26,7 @@ connection.connect(function (err) {
 });
 // set the roll list up so its ready for action
 pushIntoRoleArr();
+pushIntoDeparray();
 // 
 // //////////
 // //////////////
@@ -175,6 +177,7 @@ function addDepartment() {
                     console.log("You have added the " + answer.depName + " deapartment successfully!");
                     console.log("---------------------------------------------------------------")
                     startquestions();
+                    pushIntoDeparray();
                 }
             );
         });
@@ -202,15 +205,10 @@ function addRole() {
                 }
             },
             {
-                name: "depid",
-                type: "input",
-                message: "Please enter the Department ID number?",
-                validate: function (depid) {
-                    if (isNaN(depid) === false) {
-                        return true;
-                    }
-                    return false;
-                }
+                name: "dep",
+                type: "list",
+                message: "What is the department for this Role?",
+                choices: depArray
             }
         ]).then(function (answer) {
             connection.query(
@@ -218,14 +216,15 @@ function addRole() {
                 {
                     title: answer.title.trim(),
                     salary: answer.salary,
-                    department_id: answer.depid
+                    department_id: parseInt(answer.dep.split(" ")[0])
                 },
                 function (err) {
                     if (err) throw err;
                     console.log("---------------------------------------------------------------")
                     console.log("You have added " + answer.title + " as a new role successfully!");
                     console.log("---------------------------------------------------------------")
-                    // re-prompt the user for if they want to bid or post
+                    //add new role to role array
+                    pushIntoRoleArr();
                     startquestions();
                 }
             );
@@ -258,8 +257,7 @@ function addEmployee() {
                 {
                     first_name: answer.fName.trim(),
                     last_name: answer.lName.trim(),
-                    // THIS NEEDS MORE LOGIC TO GET THE ID FROM THE CHOICE
-                    role_id: answer.role
+                    role_id: parseInt(answer.role.split(" ")[0])
                 },
                 function (err) {
                     if (err) throw err;
@@ -312,6 +310,7 @@ function viewEmployees() {
 // ////////////////// Update functions
 // update employee, or delete
 function updateOrDelete() {
+    pushIntoRoleArr();
     inquirer
         .prompt([
             {
@@ -335,7 +334,7 @@ function updateOrDelete() {
             }
         })
 }
-//  still not finished
+
 function updateEmployee() {
     connection.query("SELECT * FROM employee", function (err, results) {
         if (err) throw err;
@@ -392,7 +391,45 @@ function updateEmployee() {
             });
     })
 };
+function deleteEmployee() {
+    connection.query("SELECT * FROM employee", function (err, results) {
+        if (err) throw err;
+        inquirer
+            .prompt([
+                {
+                    name: "choice",
+                    type: "list",
+                    choices: function () {
+                        for (var i = 0; i < results.length; i++) {
+                            var fullName = `${results[i].id} ${results[i].first_name} ${results[i].last_name}`
+                            employeeArray.push(fullName);
+                            employeeObjects.push(results);
+                        }
+                        return employeeArray;
+                    }
+                }
+            ]).then(function (res) {
+                var query = `DELETE FROM employee WHERE id = ${parseInt(res.choice.split(" ")[0])};`
+                connection.query(query, function (err, deleted) {
+                    if (err) throw err;
+                    console.log("---------------------------------------------------------------")
+                    console.log(`You have successfully deleted ${res.choice}!`);
+                    console.log("---------------------------------------------------------------")
+                    startquestions();
+                })
 
+            })
+    })
+}
+function pushIntoDeparray() {
+    connection.query("SELECT * FROM department", function (err, res) {
+        if (err) throw err;
+        for (var i = 0; i < res.length; i++) {
+            var deptitle = `${res[i].id} ${res[i].name}`;
+            depArray.push(deptitle);
+        }
+    });
+}
 function pushIntoRoleArr() {
     connection.query("SELECT * FROM role", function (err, roleList) {
         if (err) throw err;
@@ -403,9 +440,6 @@ function pushIntoRoleArr() {
             roleArray.push(title);
             roleObjects.push(lO);
         }
-
-
-
     });
 }
 // RUN APP
