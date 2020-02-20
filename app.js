@@ -2,8 +2,14 @@ var mysql = require("mysql");
 var inquirer = require("inquirer");
 var cTabel = require("console.table");
 var clear = require('clear');
+var opening = require("./opening")
 
+// variable to hold emploee data for updating
+var employeeArray = [];
+var employeeObjects = [];
+var roleArray = [];
 
+opening();
 // need to connect db to js file
 var connection = mysql.createConnection({
     host: "localhost",
@@ -16,6 +22,8 @@ connection.connect(function (err) {
     if (err) throw err;
 
 });
+// set the roll list up so its ready for action
+pushIntoRoleArr();
 // 
 // //////////
 // //////////////
@@ -27,7 +35,9 @@ function viewCompany() {
         if (err) {
             throw err;
         }
+        console.log("---------------------------------------------------------------")
         console.table(res);
+        console.log("---------------------------------------------------------------")
         startquestions();
     })
 }
@@ -61,6 +71,7 @@ function startquestions() {
                 case "Update or delete Employee":
                     // insert function
                     updateOrDelete();
+                    pushIntoRoleArr();
                     break;
                 case "EXIT":
                     // insert function
@@ -92,12 +103,14 @@ function mainADDER() {
                     break;
                 case "Role":
                     addRole();
+                    pushIntoRoleArr();
                     break;
                 case "Employee":
                     addEmployee();
                     break;
                 case "Go back":
                     startquestions();
+                    break;
             }
         })
 }
@@ -157,12 +170,14 @@ function addDepartment() {
                 },
                 function (err) {
                     if (err) throw err;
+                    console.log("---------------------------------------------------------------")
                     console.log("You have added the " + answer.depName + " deapartment successfully!");
-
+                    console.log("---------------------------------------------------------------")
+                    startquestions();
                 }
             );
         });
-    startquestions();
+
 };
 // Add role to role data
 function addRole() {
@@ -200,13 +215,15 @@ function addRole() {
             connection.query(
                 query,
                 {
-                    title: answer.title.trim(" "),
+                    title: answer.title.trim(),
                     salary: answer.salary,
                     department_id: answer.depid
                 },
                 function (err) {
                     if (err) throw err;
+                    console.log("---------------------------------------------------------------")
                     console.log("You have added " + answer.title + " as a new role successfully!");
+                    console.log("---------------------------------------------------------------")
                     // re-prompt the user for if they want to bid or post
                     startquestions();
                 }
@@ -215,45 +232,78 @@ function addRole() {
 }
 // need to save employees to variable for choices when user wantes to update or view
 function addEmployee() {
-    // make a constructor that will take in all the data for a new employee
-    // then push it to the database
+    var query = "INSERT INTO employee SET ?";
+    inquirer
+        .prompt([
+            {
+                name: "fName",
+                type: "input",
+                message: "What is thier First name?"
+            },
+            {
+                name: "lName",
+                type: "input",
+                message: "What is thier Last Name?",
+            },
+            {
+                name: "role",
+                type: "list",
+                message: "What is thier Role?",
+                choices: roleArray
+            }
+        ]).then(function (answer) {
+            connection.query(
+                query,
+                {
+                    first_name: answer.fName.trim(),
+                    last_name: answer.lName.trim(),
+                    // THIS NEEDS MORE LOGIC TO GET THE ID FROM THE CHOICE
+                    role_id: answer.role
+                },
+                function (err) {
+                    if (err) throw err;
+                    console.log("---------------------------------------------------------------")
+                    console.log("You have added " + answer.fName + " to the team!");
+                    console.log("---------------------------------------------------------------")
+                    // re-prompt the user for if they want to bid or post
+                    startquestions();
+                }
+            );
+        })
 }
 // 
 // //////////
 // //////////////
 // ////////////////// View functions
 function viewRoles() {
-
     var query = "SELECT * from role";
     connection.query(query, function (err, res) {
-        for (var i = 0; i < res.length; i++) {
-
-        }
+        console.log("---------------------------------------------------------------")
         console.table(res);
+        console.log("---------------------------------------------------------------")
+        startquestions();
     })
-    startquestions();
-
 };
 // veiw the departments
 function viewDepartments() {
     var query = "SELECT * from department";
     connection.query(query, function (err, res) {
-        for (var i = 0; i < res.length; i++) {
-            console.log("ID: " + res[i].id + " " + "Name: " + res[i].name);
-
-        }
+        console.log("---------------------------------------------------------------")
+        console.table(res);
+        console.log("---------------------------------------------------------------")
+        startquestions();
     })
-    startquestions();
 };
 // view all employees
 function viewEmployees() {
     var query = "SELECT * from employee";
     connection.query(query, function (err, res) {
-        for (var i = 0; i < res.length; i++) {
-        }
+        console.log("---------------------------------------------------------------")
         console.table(res);
+        console.log("---------------------------------------------------------------")
+        startquestions();
     })
-    startquestions();
+
 }
 // 
 // //////////
@@ -284,14 +334,7 @@ function updateOrDelete() {
             }
         })
 }
-
-// variable to hold emploee data for updating
-var employeeArray = [];
-var employeeObjects = [];
-
-
-
-
+//  still not finished
 function updateEmployee() {
     connection.query("SELECT * FROM employee", function (err, results) {
         if (err) throw err;
@@ -315,28 +358,22 @@ function updateEmployee() {
                     if (err) throw err;
                     inquirer
                         .prompt([
-                            // {
-                            //     name: "firstName",
-                            //     type: "value",
-                            //     message: "What is the new First Name?"
-                            // },
-                            // {
-                            //     name: "lastName",
-                            //     type: "value",
-                            //     message: "What is the new Last Name?"
-                            // },
+                            {
+                                name: "firstName",
+                                type: "value",
+                                message: "What is the new First Name?"
+                            },
+                            {
+                                name: "lastName",
+                                type: "value",
+                                message: "What is the new Last Name?"
+                            },
                             {
                                 name: "Roll",
                                 type: "list",
                                 message: "What is the new Role?",
-                                choices: function () {
-                                    for (var i = 0; i > roleList.length; i++) {
-                                        var roleArray = [];
-                                        roleArray.push(roleList[i].title)
-                                        console.log(roleArray)
-                                    }
-                                    return roleArray;
-                                }
+                                // THIS NEEDS MORE LOGIC TO GET THE ID FROM THE CHOICE
+                                choices: roleArray
                             }
                         ]).then(function (updated) {
                             // var query = `UPDATE table set first_name = ${updated.firstName.trim()}, last_name = ${updated.lastName.trim()}, role_id = ${} `
@@ -363,6 +400,14 @@ function updateEmployee() {
     })
 };
 
-
+function pushIntoRoleArr() {
+    connection.query("SELECT * FROM role", function (err, roleList) {
+        for (var i = 0; i < roleList.length; i++) {
+            var title = roleList[i].title;
+            roleArray.push(title);
+        }
+    });
+}
 // RUN APP
+
 viewCompany();
