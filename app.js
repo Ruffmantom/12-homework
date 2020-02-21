@@ -2,14 +2,14 @@ var mysql = require("mysql");
 var inquirer = require("inquirer");
 var cTabel = require("console.table");
 var clear = require('clear');
-var opening = require("./opening")
+var opening = require("./opening");
 
 // variable to hold emploee data for updating
-var employeeArray = [];
-var employeeObjects = [];
-var roleArray = [];
-var roleObjects = [];
-var depArray = [];
+let employeeArray = [];
+let employeeObjects = [];
+let roleArray = [];
+// var roleObjects = [];
+let depArray = [];
 
 opening();
 // need to connect db to js file
@@ -27,6 +27,7 @@ connection.connect(function (err) {
 // set the roll list up so its ready for action
 pushIntoRoleArr();
 pushIntoDeparray();
+pushIntoEmployee();
 // 
 // //////////
 // //////////////
@@ -225,6 +226,7 @@ function addRole() {
                     console.log("You have added " + answer.title + " as a new role successfully!");
                     console.log("---------------------------------------------------------------")
                     //add new role to role array
+                    pushIntoDeparray();
                     pushIntoRoleArr();
                     startquestions();
                 }
@@ -337,62 +339,57 @@ function updateOrDelete() {
 }
 
 function updateEmployee() {
-    connection.query("SELECT * FROM employee", function (err, results) {
-        if (err) throw err;
-        inquirer
-            .prompt([
-                {
-                    name: "choice",
-                    type: "list",
-                    choices: function () {
-                        for (var i = 0; i < results.length; i++) {
-                            var fullName = `${results[i].id} ${results[i].first_name} ${results[i].last_name}`
-                            employeeArray.push(fullName);
-                            employeeObjects.push(results);
+    if (err) throw err;
+    inquirer
+        .prompt([
+            {
+                name: "choice",
+                type: "list",
+                choices: employeeArray
+            }
+
+        ])
+        .then(function (answer) {
+            connection.query("SELECT * FROM role", function (err, roleList) {
+                if (err) throw err;
+                inquirer
+                    .prompt([
+                        {
+                            name: "firstName",
+                            type: "value",
+                            message: "What is the new First Name?"
+                        },
+                        {
+                            name: "lastName",
+                            type: "value",
+                            message: "What is the new Last Name?"
+                        },
+                        {
+                            name: "Roll",
+                            type: "list",
+                            message: "What is the new Role?",
+                            // THIS NEEDS MORE LOGIC TO GET THE ID FROM THE CHOICE
+                            choices: roleArray
                         }
-                        return employeeArray;
-                    }
-                }
-            ])
-            .then(function (answer) {
-                connection.query("SELECT * FROM role", function (err, roleList) {
-                    if (err) throw err;
-                    inquirer
-                        .prompt([
-                            {
-                                name: "firstName",
-                                type: "value",
-                                message: "What is the new First Name?"
-                            },
-                            {
-                                name: "lastName",
-                                type: "value",
-                                message: "What is the new Last Name?"
-                            },
-                            {
-                                name: "Roll",
-                                type: "list",
-                                message: "What is the new Role?",
-                                // THIS NEEDS MORE LOGIC TO GET THE ID FROM THE CHOICE
-                                choices: roleArray
-                            }
-                        ]).then(function (updated) {
-                            let x = parseInt(updated.Roll.split(" ")[0]);
-                            let nameID = parseInt(answer.choice.split(" ")[0]);
-                            var query = `UPDATE employee set first_name="${updated.firstName}",last_name="${updated.lastName}",role_id = ${x} WHERE id=${nameID}`;
-                            connection.query(query, function (err, res) {
-                                if (err) throw err;
-                                console.log("---------------------------------------------------------------")
-                                console.log(`You have successfully updated ${updated.firstName} with a role of ${updated.Roll}!`);
-                                console.log("---------------------------------------------------------------")
-                                startquestions();
-                            })
+                    ]).then(function (updated) {
+                        let x = parseInt(updated.Roll.split(" ")[0]);
+                        let nameID = parseInt(answer.choice.split(" ")[0]);
+                        var query = `UPDATE employee set first_name="${updated.firstName}",last_name="${updated.lastName}",role_id = ${x} WHERE id=${nameID}`;
+                        connection.query(query, function (err, res) {
+                            if (err) throw err;
+                            console.log("---------------------------------------------------------------")
+                            console.log(`You have successfully updated ${updated.firstName} with a role of ${updated.Roll}!`);
+                            console.log("---------------------------------------------------------------")
+                            startquestions();
                         })
-                });
+                    })
             });
-    })
+        });
+
 };
+
 function deleteEmployee() {
+    pushIntoEmployee();
     connection.query("SELECT * FROM employee", function (err, results) {
         if (err) throw err;
         inquirer
@@ -400,14 +397,7 @@ function deleteEmployee() {
                 {
                     name: "choice",
                     type: "list",
-                    choices: function () {
-                        for (var i = 0; i < results.length; i++) {
-                            var fullName = `${results[i].id} ${results[i].first_name} ${results[i].last_name}`
-                            employeeArray.push(fullName);
-                            employeeObjects.push(results);
-                        }
-                        return employeeArray;
-                    }
+                    choices: employeeArray
                 }
             ]).then(function (res) {
                 var query = `DELETE FROM employee WHERE id = ${parseInt(res.choice.split(" ")[0])};`
@@ -417,12 +407,24 @@ function deleteEmployee() {
                     console.log(`You have successfully deleted ${res.choice}!`);
                     console.log("---------------------------------------------------------------")
                     startquestions();
-                })
 
+                })
             })
     })
 }
+
+function pushIntoEmployee() {
+    employeeArray = [];
+    connection.query("SELECT * FROM employee", function (err, results) {
+        for (var i = 0; i < results.length; i++) {
+            var fullName = `${results[i].id} ${results[i].first_name} ${results[i].last_name}`
+            employeeArray.push(fullName);
+            employeeObjects.push(results);
+        }
+    })
+}
 function pushIntoDeparray() {
+    depArray = [];
     connection.query("SELECT * FROM department", function (err, res) {
         if (err) throw err;
         for (var i = 0; i < res.length; i++) {
@@ -432,14 +434,14 @@ function pushIntoDeparray() {
     });
 }
 function pushIntoRoleArr() {
+    roleArray = [];
     connection.query("SELECT * FROM role", function (err, roleList) {
         if (err) throw err;
         for (var i = 0; i < roleList.length; i++) {
             var title = `${roleList[i].id} ${roleList[i].title}`;
-            var lO = roleList[i].id;
-
+            // var lO = roleList[i].id;
             roleArray.push(title);
-            roleObjects.push(lO);
+            // roleObjects.push(lO);
         }
     });
 }
