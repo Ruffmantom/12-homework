@@ -339,7 +339,6 @@ function updateOrDelete() {
 }
 
 function updateEmployee() {
-    if (err) throw err;
     inquirer
         .prompt([
             {
@@ -416,6 +415,7 @@ function deleteEmployee() {
 function pushIntoEmployee() {
     employeeArray = [];
     connection.query("SELECT * FROM employee", function (err, results) {
+        if (err) throw err;
         for (var i = 0; i < results.length; i++) {
             var fullName = `${results[i].id} ${results[i].first_name} ${results[i].last_name}`
             employeeArray.push(fullName);
